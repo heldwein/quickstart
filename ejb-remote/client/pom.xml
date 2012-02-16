@@ -68,22 +68,6 @@
 
    <dependencies>
 
-       <!-- Import the transaction spec API, we use runtime scope because we aren't using any direct
-        reference to the spec API in our client code -->
-      <dependency>
-         <groupId>org.jboss.spec.javax.transaction</groupId>
-         <artifactId>jboss-transaction-api_1.1_spec</artifactId>
-         <scope>runtime</scope>
-      </dependency>
-
-      <!-- Import the EJB 3.1 API, we use runtime scope because we aren't using any direct
-       reference to EJB spec API in our client code -->
-      <dependency>
-         <groupId>org.jboss.spec.javax.ejb</groupId>
-         <artifactId>jboss-ejb-api_3.1_spec</artifactId>
-         <scope>runtime</scope>
-      </dependency>
-
        <!-- We depend on the server side EJBs of this application -->
        <dependency>
           <groupId>org.jboss.as.quickstarts</groupId>
@@ -91,51 +75,13 @@
           <version>${project.version}</version>
        </dependency>
 
-       <!-- JBoss EJB client API jar. We use runtime scope because the EJB client API
-        isn't directly used in this example. We just need it in our runtime classpath -->
+       <!-- JBoss EJB client BOM which brings in the necessary dependencies for EJB client usage -->
        <dependency>
-           <groupId>org.jboss</groupId>
-           <artifactId>jboss-ejb-client</artifactId>
-           <version>1.0.0.Final</version>
-           <scope>runtime</scope>
-       </dependency>
-
-       <!-- client communications with the server use XNIO -->
-       <dependency>
-           <groupId>org.jboss.xnio</groupId>
-           <artifactId>xnio-api</artifactId>
-           <version>3.0.0.GA</version>
-           <scope>runtime</scope>
-       </dependency>
-
-       <dependency>
-           <groupId>org.jboss.xnio</groupId>
-           <artifactId>xnio-nio</artifactId>
-           <version>3.0.0.GA</version>
-           <scope>runtime</scope>
-       </dependency>
-
-      <!-- The client needs JBoss remoting to access the server -->
-       <dependency>
-            <groupId>org.jboss.remoting3</groupId>
-            <artifactId>jboss-remoting</artifactId>
-            <version>3.2.0.CR9</version>
-            <scope>runtime</scope>
-        </dependency>
-
-      <!-- Remote EJB accesses can be secured -->
-       <dependency>
-           <groupId>org.jboss.sasl</groupId>
-           <artifactId>jboss-sasl</artifactId>
-           <version>1.0.0.Final</version>
-       </dependency>
-
-       <!-- data serialization for invoking remote EJBs -->
-       <dependency>
-           <groupId>org.jboss.marshalling</groupId>
-           <artifactId>jboss-marshalling-river</artifactId>
-           <version>1.3.7.GA</version>
-           <scope>runtime</scope>
+           <groupId>org.jboss.as</groupId>
+           <artifactId>jboss-as-ejb-client-bom</artifactId>
+           <version>7.1.0.Final</version>
+           <type>pom</type>
+           <scope>compile</scope>
        </dependency>
 
    </dependencies>
