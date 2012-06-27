@@ -54,6 +54,7 @@
                 <module>ejb-in-ear</module>
                 <module>ejb-in-war</module>
                 <module>ejb-remote</module>
+                <module>ejb-remote-security</module>
                 <module>ejb-security</module>
                 <module>greeter</module>
                 <module>helloworld</module>
