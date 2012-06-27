@@ -22,21 +22,152 @@
 
 package org.jboss.as.quickstarts.ejb.remote.security.client;
 
+import org.jboss.as.quickstarts.ejb.remote.security.RemoteSecureBean;
+import org.jboss.ejb.client.EJBClientContext;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 /**
  * @author Jaikiran Pai
  */
 public class RemoteEJBClient {
 
-    public static void main(String[] args) {
-        final RemoteEJBClient remoteEJBClient = new RemoteEJBClient();
-        remoteEJBClient.bootstrap();
+    private final ScopedEJBClientContextSelector<String> scopedEJBClientContextSelector;
+
+    private enum EjbMethod {
+        METHOD_FOR_ROLE_ONE,
+        METHOD_FOR_ROLE_TWO,
+        METHOD_FOR_ANY_ROLE,
+        METHOD_FOR_DENY_ALL
     }
 
-    private void bootstrap() {
+    public static void main(String[] args) {
+        final RemoteEJBClient remoteEJBClient = new RemoteEJBClient();
+        remoteEJBClient.invokeOnSecuredSLSB();
+    }
 
+    public RemoteEJBClient() {
+        // Let's get the current EJB client context, which might be possibly null
+        // if our classpath doesn't have any jboss-ejb-client.properties (for example)
+        final EJBClientContext defaultClientContext = EJBClientContext.getCurrent();
+        // let's create our own scoped EJB client context selector
+        this.scopedEJBClientContextSelector = new ScopedEJBClientContextSelector<String>(defaultClientContext);
+        // now let's force the EJB client project to use our selector
+        EJBClientContext.setSelector(this.scopedEJBClientContextSelector);
+        // now let's lock the selector so that no other code in this application can change it
+        EJBClientContext.lockSelector();
     }
 
     private void invokeOnSecuredSLSB() {
+        final EJBInvoker ejbInvokerForRoleOne = new EJBInvoker(EjbMethod.METHOD_FOR_ROLE_ONE, "user-one", "pass-one");
+        final EJBInvoker ejbInvokerForRoleTwo = new EJBInvoker(EjbMethod.METHOD_FOR_ROLE_TWO, "user-two", "pass-two");
+        // we use user-one for invoking on a EJB method allowing any role
+        final EJBInvoker ejbInvokerForAnyRole = new EJBInvoker(EjbMethod.METHOD_FOR_ANY_ROLE, "user-one", "pass-one");
+        // we use user-two for invoking on a EJB method which doesn't any role to access it
+        final EJBInvoker ejbInvokerForDenyAll = new EJBInvoker(EjbMethod.METHOD_FOR_DENY_ALL, "user-two", "pass-two");
 
+        // we are going to do 4 invocations, one each in a separate thread
+        final int NUM_THREADS = 4;
+        final EJBInvoker[] ejbInvokers = new EJBInvoker[] {ejbInvokerForRoleOne, ejbInvokerForRoleTwo, ejbInvokerForAnyRole, ejbInvokerForDenyAll};
+        final Future<String>[] invocationResults = new Future[NUM_THREADS];
+        final ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
+        for (int i = 0; i < NUM_THREADS; i++) {
+            // submit each invocation in a separate thread
+            invocationResults[i] = executor.submit(ejbInvokers[i]);
+        }
+        // now get the results
+        for (int i = 0; i < NUM_THREADS; i++) {
+            
+        }
+
+
+    }
+
+    private class EJBInvoker implements Callable<String> {
+
+        private final String userName;
+        private final String password;
+        private final EjbMethod methodToInvoke;
+
+        EJBInvoker(final EjbMethod methodToInvoke, final String userName, final String password) {
+            this.userName = userName;
+            this.password = password;
+            this.methodToInvoke = methodToInvoke;
+
+            // create the EJB client context config properties, using this specific username
+            // and password. The rest of the properties are common
+            final Properties ejbClientContextProperties = this.createEJBClientContextProperties();
+            // Register a EJB client context for this scope (==username)
+            // we use the user name as the "scope" for our EJB client context selector
+            // but that's just an example. The scope EJB client context selector is generic and
+            // and depending on the application's needs, an appropriate scope can be used
+            scopedEJBClientContextSelector.registerScopedEJBClientContext(userName, ejbClientContextProperties);
+        }
+
+        private Properties createEJBClientContextProperties() {
+            final Properties ejbClientContextProps = new Properties();
+            final String connectionName = "foo-bar-connection";
+            // add a property which lists the connections that we are configuring. In
+            // this example, we are just configuring a single connection named "foo-bar-connection"
+            ejbClientContextProps.put("remote.connections", connectionName);
+            // add a property which points to the host server of the "foo-bar-connection"
+            ejbClientContextProps.put("remote.connection." + connectionName + ".host", "localhost");
+            // add a property which points to the port on which the server is listening for EJB invocations
+            ejbClientContextProps.put("remote.connection." + connectionName + ".port", "4447");
+            // add the username and password properties which will be used to establish this connection
+            ejbClientContextProps.put("remote.connection." + connectionName + ".username", userName);
+            ejbClientContextProps.put("remote.connection." + connectionName + ".password", password);
+            // disable "silent" auth, which gets triggered if the client is on the same machine as the server
+            ejbClientContextProps.put("remote.connection." + connectionName + ".connect.options.org.xnio.Options.SASL_DISALLOWED_MECHANISMS", "JBOSS-LOCAL-USER");
+//            ejbClientContextProps.put("remote.connection." + connectionName + ".connect.options.org.xnio.Options.SASL_POLICY_NOANONYMOUS", "false");
+//            ejbClientContextProps.put("remote.connection." + connectionName + ".connect.options.org.xnio.Options.SASL_POLICY_NOPLAINTEXT", "false");
+
+            return ejbClientContextProps;
+        }
+
+        @Override
+        public String call() throws Exception {
+            // let's first create a InitialContext
+            final Properties jndiContextProps = new Properties();
+            jndiContextProps.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+            final Context jndiContext = new InitialContext(jndiContextProps);
+            final String appName = "";
+            final String moduleName = "jboss-as-ejb-remote-security-app";
+            final String distinctName = "";
+            final String beanName = "SecuredSLSB";
+            final String beanInterface = RemoteSecureBean.class.getName();
+            final String jndiName = "ejb:" + appName + "/" + moduleName + "/" + distinctName + "/" + beanName + "!" + beanInterface;
+            // lookup the remote interface of the bean
+            final RemoteSecureBean remoteSecuredBean = (RemoteSecureBean) jndiContext.lookup(jndiName);
+            // now it's time to invoke on the bean. Let's first set the "scope" of the selector
+            // so that the correct EJB client context is used
+            // In this example, we are using the username as the "scope" but it's ultimately up to the
+            // application to decide what they want to use as scope
+            scopedEJBClientContextSelector.setCurrentScope(this.userName);
+            try {
+                switch (this.methodToInvoke) {
+                    case METHOD_FOR_ANY_ROLE:
+                        return remoteSecuredBean.allowEveryone();
+                    case METHOD_FOR_DENY_ALL:
+                        remoteSecuredBean.allowNone();
+                        throw new RuntimeException("An EJBException was expected for invoking on a @DenyAll method, but did not receive any");
+                    case METHOD_FOR_ROLE_ONE:
+                        return remoteSecuredBean.allowRoleOne();
+                    case METHOD_FOR_ROLE_TWO:
+                        return remoteSecuredBean.allowRoleTwo();
+                    default:
+                        throw new IllegalArgumentException("Unknown EJB method to invoke upon " + this.methodToInvoke);
+                }
+            } finally {
+                // we are done with the invocation, so clear the current "scope"
+                scopedEJBClientContextSelector.clearCurrentScope();
+            }
+        }
     }
 }
