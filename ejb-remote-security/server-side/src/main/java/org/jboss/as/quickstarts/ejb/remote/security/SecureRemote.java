@@ -25,7 +25,7 @@ package org.jboss.as.quickstarts.ejb.remote.security;
 /**
  * @author Jaikiran Pai
  */
-public interface RemoteSecureBean {
+public interface SecureRemote {
 
     String allowRoleOne();
 

@@ -37,9 +37,14 @@ import java.util.Properties;
  */
 public class ScopedEJBClientContextSelector<T> implements ContextSelector<EJBClientContext> {
 
-    private final ThreadLocal<T> currentScope = new ThreadLocal<T>();
+    private final ThreadLocal<Map<T, EJBClientContext>> scopedEJBClientContextsPerThread = new ThreadLocal<Map<T, EJBClientContext>>() {
+        @Override
+        protected Map<T, EJBClientContext> initialValue() {
+            return new HashMap<T, EJBClientContext>();
+        }
+    };
 
-    private final Map<T, EJBClientContext> scopedEJBClientContexts = new HashMap<T, EJBClientContext>();
+    private final ThreadLocal<T> currentScope = new ThreadLocal<T>();
 
     private final EJBClientContext defaultEJBClientContext;
 
@@ -63,13 +68,12 @@ public class ScopedEJBClientContextSelector<T> implements ContextSelector<EJBCli
         if (scope == null) {
             throw new IllegalArgumentException("Scope cannot be null for a scoped EJB client context");
         }
-        synchronized (this.scopedEJBClientContexts) {
-            final EJBClientContext alreadyRegisteredContext = this.scopedEJBClientContexts.get(scope);
-            if (alreadyRegisteredContext != null) {
-                throw new IllegalStateException("An EJB client context is already registered for scope " + scope);
-            }
-            this.scopedEJBClientContexts.put(scope, ejbClientContext);
+        final Map<T, EJBClientContext> scopedEJBClientContexts = this.scopedEJBClientContextsPerThread.get();
+        final EJBClientContext alreadyRegisteredContext = scopedEJBClientContexts.get(scope);
+        if (alreadyRegisteredContext != null) {
+            throw new IllegalStateException("An EJB client context is already registered for scope " + scope);
         }
+        scopedEJBClientContexts.put(scope, ejbClientContext);
     }
 
     public void registerScopedEJBClientContext(final T scope, final Properties ejbClientContextConfigProperties) {
@@ -81,11 +85,8 @@ public class ScopedEJBClientContextSelector<T> implements ContextSelector<EJBCli
         this.registerScopedEJBClientContext(scope, newlyCreatedEJBClientContext);
     }
 
-    public void registerDefaultEJBClientContext(final Properties ejbClientContextConfigProperties) {
-        if (ejbClientContextConfigProperties == null) {
-            throw new IllegalArgumentException("EJB client context configuration properties cannot be null");
-        }
-
+    public void unregisterScopedEJBClientContexts() {
+        this.scopedEJBClientContextsPerThread.remove();
     }
 
     @Override
@@ -96,9 +97,9 @@ public class ScopedEJBClientContextSelector<T> implements ContextSelector<EJBCli
             // use the default EJB client context (if any) in the absence of a scope
             return this.defaultEJBClientContext;
         }
-        synchronized (this.scopedEJBClientContexts) {
-            return this.scopedEJBClientContexts.get(scope);
-        }
+        final Map<T, EJBClientContext> clientContexts = this.scopedEJBClientContextsPerThread.get();
+        return clientContexts.get(scope);
+
     }
 
     private EJBClientContext createEJBClientContext(final Properties properties) {

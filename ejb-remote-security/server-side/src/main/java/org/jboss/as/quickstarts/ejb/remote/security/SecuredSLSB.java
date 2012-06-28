@@ -35,8 +35,8 @@ import javax.ejb.Stateless;
  */
 @Stateless
 @SecurityDomain("application-realm-backed-security-domain")
-@Remote (RemoteSecureBean.class)
-public class SecuredSLSB implements RemoteSecureBean {
+@Remote (SecureRemote.class)
+public class SecuredSLSB implements SecureRemote {
 
     @Resource
     private EJBContext ejbContext;
