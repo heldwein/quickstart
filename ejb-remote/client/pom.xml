@@ -147,6 +147,12 @@
            <scope>runtime</scope>
        </dependency>
 
+       <!-- Picketbox dependency for using ClientLoginModule -->
+       <dependency>
+           <groupId>org.picketbox</groupId>
+           <artifactId>picketbox</artifactId>
+       </dependency>
+
    </dependencies>
 
    <build>
