@@ -16,6 +16,8 @@
  */
 package org.jboss.as.quickstarts.ejb_security_interceptors;
 
+import java.util.Map;
+
 import org.jboss.ejb.client.EJBClientInterceptor;
 import org.jboss.ejb.client.EJBClientInvocationContext;
 
@@ -26,8 +28,19 @@ import org.jboss.ejb.client.EJBClientInvocationContext;
  */
 public class ClientSecurityInterceptor implements EJBClientInterceptor {
 
+    private static String desiredUser;
+
+    public static void setDesiredUser(final String desiredUser) {
+        ClientSecurityInterceptor.desiredUser = desiredUser;
+    }
+
     public void handleInvocation(EJBClientInvocationContext context) throws Exception {
         System.out.println("ClientSecurityInterceptor - handleInvocation");
+
+        if (desiredUser != null) {
+            Map<String, Object> contextData = context.getContextData();
+            contextData.put(ServerSecurityInterceptor.DELEGATED_USER_KEY, desiredUser);
+        }
 
         context.sendRequest();
     }

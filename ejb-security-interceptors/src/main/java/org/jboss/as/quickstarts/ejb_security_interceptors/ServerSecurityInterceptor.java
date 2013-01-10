@@ -16,8 +16,18 @@
  */
 package org.jboss.as.quickstarts.ejb_security_interceptors;
 
+import java.security.Principal;
+import java.util.Map;
+
+import javax.ejb.EJBAccessException;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
+import javax.resource.spi.IllegalStateException;
+
+import org.jboss.as.security.remoting.RemotingContext;
+import org.jboss.remoting3.Connection;
+import org.jboss.remoting3.security.UserPrincipal;
+import org.jboss.security.SecurityContext;
 
 /**
  * The server side security interceptor responsible for handling any security identity propagated from the client.
@@ -26,14 +36,86 @@ import javax.interceptor.InvocationContext;
  */
 public class ServerSecurityInterceptor {
 
+    static final String DELEGATED_USER_KEY = ServerSecurityInterceptor.class.getName() + ".DelegationUser";
+
     @AroundInvoke
     public Object aroundInvoke(final InvocationContext invocationContext) throws Exception {
         System.out.println("ServerSecurityInterceptor - Start");
 
+        System.out.println("RemotingContext.isSet()=" + RemotingContext.isSet());
+
+        Principal desiredUser = null;
+        UserPrincipal connectionUser = null;
+
+        Map<String, Object> contextData = invocationContext.getContextData();
+        if (contextData.containsKey(DELEGATED_USER_KEY)) {
+            desiredUser = new SimplePrincipal((String) contextData.get(DELEGATED_USER_KEY));
+            System.out.println("Remote side requesting call as " + desiredUser);
+
+            Connection con = SecurityActions.remotingContextGetConnection();
+            if (con != null) {
+                for (Principal current : con.getPrincipals()) {
+                    if (current instanceof UserPrincipal) {
+                        connectionUser = (UserPrincipal) current;
+                        break;
+                    }
+                }
+            } else {
+                throw new IllegalStateException("Delegation user requested but no user on connection found.");
+            }
+        }
+
+        SecurityContext cachedSecurityContext = null;
+        boolean contextSet = false;
         try {
+            if (desiredUser != null && connectionUser != null) {
+                // We have been requested to switch user and have successfully identified the user from the connection
+                // so now we attempt the switch.
+                cachedSecurityContext = SecurityActions.securityContextSetPrincipalInfo(desiredUser, new OuterUserCredential(
+                        connectionUser));
+            }
+
             return invocationContext.proceed();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new EJBAccessException("Unable to attempt switching of user.");
         } finally {
+            if (contextSet) {
+                SecurityActions.securityContextSet(cachedSecurityContext);
+            }
+
             System.out.println("ServerSecurityInterceptor - End");
         }
+    }
+
+    private static class SimplePrincipal implements Principal {
+
+        private final String name;
+
+        private SimplePrincipal(final String name) {
+            if (name == null) {
+                throw new IllegalArgumentException("name can not be null.");
+            }
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public int hashCode() {
+            return name.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof SimplePrincipal && equals((SimplePrincipal) other);
+        }
+
+        public boolean equals(SimplePrincipal other) {
+            return this == other || other != null && name.equals(other.name);
+        }
+
     }
 }
