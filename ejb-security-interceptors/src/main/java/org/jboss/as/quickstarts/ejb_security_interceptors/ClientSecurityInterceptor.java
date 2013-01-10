@@ -26,18 +26,16 @@ import org.jboss.ejb.client.EJBClientInvocationContext;
  */
 public class ClientSecurityInterceptor implements EJBClientInterceptor {
 
-	public void handleInvocation(EJBClientInvocationContext context)
-			throws Exception {
-		System.out.println("ClientSecurityInterceptor - handleInvocation");
-		
-		context.sendRequest();
-	}
+    public void handleInvocation(EJBClientInvocationContext context) throws Exception {
+        System.out.println("ClientSecurityInterceptor - handleInvocation");
 
-	public Object handleInvocationResult(EJBClientInvocationContext context)
-			throws Exception {
-		System.out.println("ClientSecurityInterceptor - handleInvocationResult");
-		
-		return context.getResult();
-	}
+        context.sendRequest();
+    }
+
+    public Object handleInvocationResult(EJBClientInvocationContext context) throws Exception {
+        System.out.println("ClientSecurityInterceptor - handleInvocationResult");
+
+        return context.getResult();
+    }
 
 }

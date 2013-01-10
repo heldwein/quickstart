@@ -18,57 +18,65 @@ package org.jboss.as.quickstarts.ejb_security_interceptors;
 
 import java.util.Hashtable;
 
+import javax.ejb.EJBAccessException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 
 import org.jboss.ejb.client.EJBClientContext;
 
 /**
- * The remote client responsible for making a number of calls to the server to
- * demonstrate the capabilities of the interceptors.
+ * The remote client responsible for making a number of calls to the server to demonstrate the capabilities of the interceptors.
  * 
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
 public class RemoteClient {
 
-	private static final int CLIENT_INTERCEPTOR_ORDER = 0x99999;
+    private static final int CLIENT_INTERCEPTOR_ORDER = 0x99999;
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-		System.out
-				.println("\n\n\n* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n\n");
-		System.out.println("{RC} Starting RemoteClient.");
-		registerClientSecurityInterceptor();
-		SecuredEJBRemote remote = lookupEJB();
+    /**
+     * @param args
+     */
+    public static void main(String[] args) throws Exception {
+        System.out.println("\n\n\n* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n\n");
+        System.out.println("{RC} Starting RemoteClient.");
+        registerClientSecurityInterceptor();
+        SecuredEJBRemote remote = lookupEJB();
 
-		System.out.println("{RC} Initial Call to getSecurityInformation() - "
-				+ remote.getSecurityInformation());
+        System.out.println("{RC} Initial Call to getSecurityInformation() - " + remote.getSecurityInformation());
 
-		System.out
-				.println("\n\n* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n\n\n");
-	}
+        System.out.println("{RC} Verifying methods required roles 'RoleOne' and 'RoleTwo' are inaccessible.");
+        try {
+            remote.roleOneMethod();
+            System.err.println("{RC} Call to roleOneMethod was incorectly accepted.");
+        } catch (EJBAccessException e) {
+            System.out.println("{RC} Call to roleOneMethod was correctly rejected.");
+        }
 
-	private static void registerClientSecurityInterceptor() {
-		final EJBClientContext ejbClientContext = EJBClientContext
-				.requireCurrent();
+        try {
+            remote.roleTwoMethod();
+            System.err.println("{RC} Call to roleTwoMethod was incorectly accepted.");
+        } catch (EJBAccessException e) {
+            System.out.println("{RC} Call to roleTwoMethod was correctly rejected.");
+        }
 
-		final ClientSecurityInterceptor clientInterceptor = new ClientSecurityInterceptor();
+        System.out.println("\n\n* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n\n\n");
+    }
 
-		ejbClientContext.registerInterceptor(CLIENT_INTERCEPTOR_ORDER,
-				clientInterceptor);
-	}
+    private static void registerClientSecurityInterceptor() {
+        final EJBClientContext ejbClientContext = EJBClientContext.requireCurrent();
 
-	private static SecuredEJBRemote lookupEJB() throws Exception {
-		final Hashtable jndiProperties = new Hashtable();
-		jndiProperties.put(Context.URL_PKG_PREFIXES,
-				"org.jboss.ejb.client.naming");
-		final Context context = new InitialContext(jndiProperties);
+        final ClientSecurityInterceptor clientInterceptor = new ClientSecurityInterceptor();
 
-		return (SecuredEJBRemote) context
-				.lookup("ejb:/jboss-as-ejb-security-interceptors/SecuredEJB!"
-						+ SecuredEJBRemote.class.getName());
-	}
+        ejbClientContext.registerInterceptor(CLIENT_INTERCEPTOR_ORDER, clientInterceptor);
+    }
+
+    private static SecuredEJBRemote lookupEJB() throws Exception {
+        final Hashtable jndiProperties = new Hashtable();
+        jndiProperties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+        final Context context = new InitialContext(jndiProperties);
+
+        return (SecuredEJBRemote) context.lookup("ejb:/jboss-as-ejb-security-interceptors/SecuredEJB!"
+                + SecuredEJBRemote.class.getName());
+    }
 
 }

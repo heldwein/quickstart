@@ -20,22 +20,20 @@ import javax.interceptor.AroundInvoke;
 import javax.interceptor.InvocationContext;
 
 /**
- * The server side security interceptor responsible for handling any security
- * identity propagated from the client.
+ * The server side security interceptor responsible for handling any security identity propagated from the client.
  * 
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
 public class ServerSecurityInterceptor {
 
-	@AroundInvoke
-	public Object aroundInvoke(final InvocationContext invocationContext)
-			throws Exception {
-		System.out.println("ServerSecurityInterceptor - Start");
+    @AroundInvoke
+    public Object aroundInvoke(final InvocationContext invocationContext) throws Exception {
+        System.out.println("ServerSecurityInterceptor - Start");
 
-		try {
-			return invocationContext.proceed();
-		} finally {
-			System.out.println("ServerSecurityInterceptor - End");
-		}
-	}
+        try {
+            return invocationContext.proceed();
+        } finally {
+            System.out.println("ServerSecurityInterceptor - End");
+        }
+    }
 }

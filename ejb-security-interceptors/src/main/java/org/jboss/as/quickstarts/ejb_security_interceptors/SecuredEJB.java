@@ -25,8 +25,7 @@ import javax.ejb.Stateless;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 /**
- * A secured EJB which is used to test the identity and roles of the current
- * user during a request.
+ * A secured EJB which is used to test the identity and roles of the current user during a request.
  * 
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
@@ -35,25 +34,34 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 @SecurityDomain("other")
 public class SecuredEJB implements SecuredEJBRemote {
 
-	@Resource
-	private SessionContext context;
+    @Resource
+    private SessionContext context;
 
-	@RolesAllowed("User")
-	public String getSecurityInformation() {
-		StringBuilder sb = new StringBuilder("[");
-		sb.append("Principal={").append(context.getCallerPrincipal().getName())
-				.append("}, ");
-		userInRole("User", sb).append(", ");
-		userInRole("RoleOne", sb).append(", ");
-		userInRole("RoleTwo", sb).append("]");
+    @RolesAllowed("User")
+    public String getSecurityInformation() {
+        StringBuilder sb = new StringBuilder("[");
+        sb.append("Principal={").append(context.getCallerPrincipal().getName()).append("}, ");
+        userInRole("User", sb).append(", ");
+        userInRole("RoleOne", sb).append(", ");
+        userInRole("RoleTwo", sb).append("]");
 
-		return sb.toString();
-	}
-	
-	private StringBuilder userInRole(final String role, final StringBuilder sb) {
-		sb.append("In role {").append(role).append("}=").append(context.isCallerInRole(role));
-		
-		return sb;
-	}
+        return sb.toString();
+    }
+
+    @RolesAllowed("RoleOne")
+    public boolean roleOneMethod() {
+        return true;
+    }
+
+    @RolesAllowed("RoleTwo")
+    public boolean roleTwoMethod() {
+        return true;
+    }
+
+    private StringBuilder userInRole(final String role, final StringBuilder sb) {
+        sb.append("In role {").append(role).append("}=").append(context.isCallerInRole(role));
+
+        return sb;
+    }
 
 }
