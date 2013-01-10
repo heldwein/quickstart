@@ -21,6 +21,8 @@ import java.util.Hashtable;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 
+import org.jboss.ejb.client.EJBClientContext;
+
 /**
  * The remote client responsible for making a number of calls to the server to
  * demonstrate the capabilities of the interceptors.
@@ -29,6 +31,8 @@ import javax.naming.InitialContext;
  */
 public class RemoteClient {
 
+	private static final int CLIENT_INTERCEPTOR_ORDER = 0x99999;
+
 	/**
 	 * @param args
 	 */
@@ -36,12 +40,24 @@ public class RemoteClient {
 		System.out
 				.println("\n\n\n* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n\n");
 		System.out.println("{RC} Starting RemoteClient.");
+		registerClientSecurityInterceptor();
 		SecuredEJBRemote remote = lookupEJB();
-		
-		System.out.println("{RC} Initial Call to getSecurityInformation() - " + remote.getSecurityInformation());
+
+		System.out.println("{RC} Initial Call to getSecurityInformation() - "
+				+ remote.getSecurityInformation());
 
 		System.out
 				.println("\n\n* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n\n\n");
+	}
+
+	private static void registerClientSecurityInterceptor() {
+		final EJBClientContext ejbClientContext = EJBClientContext
+				.requireCurrent();
+
+		final ClientSecurityInterceptor clientInterceptor = new ClientSecurityInterceptor();
+
+		ejbClientContext.registerInterceptor(CLIENT_INTERCEPTOR_ORDER,
+				clientInterceptor);
 	}
 
 	private static SecuredEJBRemote lookupEJB() throws Exception {

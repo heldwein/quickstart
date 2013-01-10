@@ -117,7 +117,6 @@
 		<dependency>
 			<groupId>org.jboss</groupId>
 			<artifactId>jboss-ejb-client</artifactId>
-			<scope>runtime</scope>
 		</dependency>
 
 		<!-- client communications with the server use XNIO -->
