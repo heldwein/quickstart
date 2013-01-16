@@ -16,6 +16,16 @@
  */
 package org.jboss.as.quickstarts.ejb_security_interceptors;
 
+import org.jboss.security.SimpleGroup;
+import org.jboss.security.SimplePrincipal;
+import org.jboss.security.auth.callback.ObjectCallback;
+import org.jboss.security.auth.spi.AbstractServerLoginModule;
+
+import javax.security.auth.Subject;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -23,17 +33,6 @@ import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Map;
 import java.util.Properties;
-
-import javax.security.auth.Subject;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.login.LoginException;
-
-import org.jboss.security.SimpleGroup;
-import org.jboss.security.SimplePrincipal;
-import org.jboss.security.auth.callback.ObjectCallback;
-import org.jboss.security.auth.spi.AbstractServerLoginModule;
 
 /**
  * Login module to make the decision if one user can ask for the current request to be switched to an alternative specified
@@ -55,7 +54,7 @@ public class DelegationLoginModule extends AbstractServerLoginModule {
 
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
-        addValidOptions(new String[] { DELEGATION_PROPERTIES });
+        addValidOptions(new String[]{DELEGATION_PROPERTIES});
         super.initialize(subject, callbackHandler, sharedState, options);
         this.callbackHandler = callbackHandler;
 
@@ -85,7 +84,7 @@ public class DelegationLoginModule extends AbstractServerLoginModule {
         ObjectCallback ocb = new ObjectCallback("Password:");
 
         try {
-            callbackHandler.handle(new Callback[] { ncb, ocb });
+            callbackHandler.handle(new Callback[]{ncb, ocb});
         } catch (Exception e) {
             if (e instanceof RuntimeException) {
                 throw (RuntimeException) e;
@@ -120,20 +119,20 @@ public class DelegationLoginModule extends AbstractServerLoginModule {
 
     /**
      * Make a trust user to decide if the user switch is acceptable.
-     *
+     * <p/>
      * The default implementation checks the Properties for the user that opened the connection looking for a match, the
      * property read is then used to check if the connection user can delegate to the user specified.
-     *
+     * <p/>
      * The following entries will be checked in the Properties in this order: - user@realm - This is an exact match for the user
      * / realm combination of the connection user. user@* - This entry allows a match by username for any realm. *@realm - This
      * entry allows for any user in the realm specified. * - This matches all users.
-     *
+     * <p/>
      * Once an entry has been found the Properties will not be read again, even if the entry loaded does not allow delegation.
-     *
+     * <p/>
      * The value for the property is either '*' which means delegation to any user is allowed or a comma separate list of users
      * that can be delegated to.
      *
-     * @param requestedUser - The user this request wants to be authorized as.
+     * @param requestedUser  - The user this request wants to be authorized as.
      * @param connectionUser - The use of the connection to the server.
      * @return true if a switch is acceptable, false otherwise.
      */
@@ -186,7 +185,7 @@ public class DelegationLoginModule extends AbstractServerLoginModule {
     protected Group[] getRoleSets() throws LoginException {
         Group roles = new SimpleGroup("Roles");
         Group callerPrincipal = new SimpleGroup("CallerPrincipal");
-        Group[] groups = { roles, callerPrincipal };
+        Group[] groups = {roles, callerPrincipal};
         callerPrincipal.addMember(getIdentity());
         return groups;
     }

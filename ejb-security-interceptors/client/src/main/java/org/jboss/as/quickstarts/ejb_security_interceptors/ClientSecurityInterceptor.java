@@ -16,15 +16,15 @@
  */
 package org.jboss.as.quickstarts.ejb_security_interceptors;
 
-import java.security.Principal;
-import java.util.Map;
-
 import org.jboss.ejb.client.EJBClientInterceptor;
 import org.jboss.ejb.client.EJBClientInvocationContext;
 
+import java.security.Principal;
+import java.util.Map;
+
 /**
  * Client side interceptor responsible for propagating the local identity.
- * 
+ *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
 public class ClientSecurityInterceptor implements EJBClientInterceptor {

@@ -16,10 +16,9 @@
  */
 package org.jboss.as.quickstarts.ejb_security_interceptors;
 
-import java.util.Hashtable;
-
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import java.util.Hashtable;
 
 /**
  * Utility class for looking up EJBs

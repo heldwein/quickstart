@@ -16,26 +16,44 @@
  */
 package org.jboss.as.quickstarts.ejb_security_interceptors;
 
+import org.jboss.as.domain.management.security.RealmUser;
+
 /**
- * The interface used to access the SecuredEJB
- * 
+ * A wrapper around the user for the Connection to act as a Credential.
+ *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
-public interface SecuredEJBRemote {
+public final class OuterUserCredential {
 
-    /**
-     * @return A String containing the name of the current principal and also confirmation of role membership.
-     */
-    String getSecurityInformation();
+    private final RealmUser user;
 
-    /**
-     * A method that is only invokable if the user has the role 'RoleOne'.
-     */
-    boolean roleOneMethod();
+    OuterUserCredential(final RealmUser user) {
+        if (user == null) {
+            throw new IllegalArgumentException("UserPrincipal can not be null.");
+        }
+        this.user = user;
+    }
 
-    /**
-     * A method that is only invokable if the user has the role 'RoleTwo'.
-     */
-    boolean roleTwoMethod();
+    String getName() {
+        return user.getName();
+    }
+
+    String getRealm() {
+        return user.getRealm();
+    }
+
+    @Override
+    public int hashCode() {
+        return user.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof OuterUserCredential && equals((OuterUserCredential) other);
+    }
+
+    public boolean equals(OuterUserCredential other) {
+        return this == other || other != null && user.equals(other.user);
+    }
 
 }

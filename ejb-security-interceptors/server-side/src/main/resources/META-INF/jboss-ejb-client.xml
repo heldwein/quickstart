@@ -15,13 +15,13 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<jboss-deployment-structure xmlns="urn:jboss:deployment-structure:1.2">
-  <deployment>
-    <dependencies>
-      <module name="org.jboss.remoting3" />
-      <module name="org.jboss.as.domain-management" />
-      <module name="org.jboss.as.controller" />
-    </dependencies>
-  </deployment>
-  
-</jboss-deployment-structure>
+<jboss-ejb-client xmlns="urn:jboss:ejb-client:1.0">
+    <client-context>
+        <!-- We explicitly disable the local EJB receiver so that the server-to-server call
+            doesn't optimize and use the local EJB receiver and instead really works as a remote server
+            call -->
+        <ejb-receivers exclude-local-receiver="true">
+            <remoting-ejb-receiver outbound-connection-ref="ejb-outbound-connection"/>
+        </ejb-receivers>
+    </client-context>
+</jboss-ejb-client>

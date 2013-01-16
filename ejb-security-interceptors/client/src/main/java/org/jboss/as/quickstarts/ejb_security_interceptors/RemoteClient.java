@@ -16,13 +16,8 @@
  */
 package org.jboss.as.quickstarts.ejb_security_interceptors;
 
-import static org.jboss.as.quickstarts.ejb_security_interceptors.EJBUtil.lookupIntermediateEJB;
-import static org.jboss.as.quickstarts.ejb_security_interceptors.EJBUtil.lookupSecuredEJB;
-
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import org.jboss.security.ClientLoginModule;
+import org.jboss.security.SimplePrincipal;
 
 import javax.ejb.EJBAccessException;
 import javax.security.auth.Subject;
@@ -35,13 +30,16 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.jboss.security.ClientLoginModule;
-import org.jboss.security.SimplePrincipal;
+import static org.jboss.as.quickstarts.ejb_security_interceptors.EJBUtil.lookupIntermediateEJB;
+import static org.jboss.as.quickstarts.ejb_security_interceptors.EJBUtil.lookupSecuredEJB;
 
 /**
  * The remote client responsible for making a number of calls to the server to demonstrate the capabilities of the interceptors.
- * 
+ *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
 public class RemoteClient {
@@ -50,7 +48,7 @@ public class RemoteClient {
      * Perform the tests of this quick start using the SecurityContextAssociation API to set the desired Principal.
      */
     private static void performTestingSecurityContext(final String user, final SecuredEJBRemote secured,
-            final IntermediateEJBRemote intermediate) {
+                                                      final IntermediateEJBRemote intermediate) {
         try {
             if (user != null) {
                 SecurityActions.securityContextSetPrincpal(new SimplePrincipal(user));
@@ -72,7 +70,7 @@ public class RemoteClient {
      * Perform the tests of this quick start using the ClientLoginModule and LoginContext API to set the desired Principal.
      */
     private static void performTestingClientLoginModule(final String user, final SecuredEJBRemote secured,
-            final IntermediateEJBRemote intermediate) throws Exception {
+                                                        final IntermediateEJBRemote intermediate) throws Exception {
         LoginContext loginContext = null;
         try {
             if (user != null) {
@@ -124,7 +122,7 @@ public class RemoteClient {
                 AppConfigurationEntry clmEntry = new AppConfigurationEntry(ClientLoginModule.class.getName(),
                         AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options);
 
-                return new AppConfigurationEntry[] { clmEntry };
+                return new AppConfigurationEntry[]{clmEntry};
             }
         };
 

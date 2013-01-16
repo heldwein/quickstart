@@ -16,14 +16,6 @@
  */
 package org.jboss.as.quickstarts.ejb_security_interceptors;
 
-import java.security.Principal;
-import java.util.Map;
-
-import javax.ejb.EJBAccessException;
-import javax.interceptor.AroundInvoke;
-import javax.interceptor.InvocationContext;
-import javax.resource.spi.IllegalStateException;
-
 import org.jboss.as.controller.security.SubjectUserInfo;
 import org.jboss.as.domain.management.security.RealmUser;
 import org.jboss.logging.Logger;
@@ -31,9 +23,16 @@ import org.jboss.remoting3.Connection;
 import org.jboss.remoting3.security.UserInfo;
 import org.jboss.security.SecurityContext;
 
+import javax.ejb.EJBAccessException;
+import javax.interceptor.AroundInvoke;
+import javax.interceptor.InvocationContext;
+import javax.resource.spi.IllegalStateException;
+import java.security.Principal;
+import java.util.Map;
+
 /**
  * The server side security interceptor responsible for handling any security identity propagated from the client.
- * 
+ *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
 public class ServerSecurityInterceptor {
@@ -84,6 +83,7 @@ public class ServerSecurityInterceptor {
                 // keep track that we switched the security context
                 contextSet = true;
                 SecurityActions.remotingContextClear();
+                logger.debug("Switched security context to user " + desiredUser.getName());
             }
 
             return invocationContext.proceed();

@@ -16,18 +16,18 @@
  */
 package org.jboss.as.quickstarts.ejb_security_interceptors;
 
-import static org.jboss.as.quickstarts.ejb_security_interceptors.EJBUtil.registerClientSecurityInterceptor;
-import static org.jboss.as.quickstarts.ejb_security_interceptors.EJBUtil.lookupSecuredEJB;
+import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.security.PermitAll;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import java.util.Hashtable;
 
 /**
  * An EJB for testing EJB to remote EJB calls.
- * 
+ *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
 @Stateless
@@ -39,7 +39,6 @@ public class IntermediateEJB implements IntermediateEJBRemote {
     public String makeTestCalls() {
         try {
             StringBuilder sb = new StringBuilder("* * IntermediateEJB - Begin Testing * * \n");
-            registerClientSecurityInterceptor();
             SecuredEJBRemote remote = lookupSecuredEJB();
 
             sb.append("SecuredEJBRemote.getSecurityInformation()=").append(remote.getSecurityInformation()).append("\n");
@@ -69,5 +68,15 @@ public class IntermediateEJB implements IntermediateEJBRemote {
             throw new RuntimeException("Teasting failed.", e);
         }
     }
+
+    private SecuredEJBRemote lookupSecuredEJB() throws Exception {
+        final Hashtable<String, String> jndiProperties = new Hashtable<String, String>();
+        jndiProperties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+        final Context context = new InitialContext(jndiProperties);
+
+        return (SecuredEJBRemote) context.lookup("ejb:/jboss-as-ejb-security-interceptors/SecuredEJB!"
+                + SecuredEJBRemote.class.getName());
+    }
+
 
 }

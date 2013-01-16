@@ -16,17 +16,17 @@
  */
 package org.jboss.as.quickstarts.ejb_security_interceptors;
 
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import javax.annotation.Resource;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.Remote;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 
-import org.jboss.ejb3.annotation.SecurityDomain;
-
 /**
  * A secured EJB which is used to test the identity and roles of the current user during a request.
- * 
+ *
  * @author <a href="mailto:darran.lofthouse@jboss.com">Darran Lofthouse</a>
  */
 @Stateless
@@ -38,7 +38,7 @@ public class SecuredEJB implements SecuredEJBRemote {
     private SessionContext context;
 
     @RolesAllowed("User")
-    public String getSecurityInformation() {        
+    public String getSecurityInformation() {
         StringBuilder sb = new StringBuilder("[");
         sb.append("Principal={").append(context.getCallerPrincipal().getName()).append("}, ");
         userInRole("User", sb).append(", ");
