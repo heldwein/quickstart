@@ -18,7 +18,9 @@ package org.jboss.as.quickstarts.ejb_security;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+
 import javax.ejb.EJB;
+import javax.ejb.EJBAccessException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.HttpConstraint;
 import javax.servlet.annotation.ServletSecurity;
@@ -27,14 +29,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.jboss.as.quickstarts.ejb_security.SecuredEJB;
-
 /**
  * A simple secured Servlet which calls a secured EJB. Upon successful authentication and authorization the EJB will return the
  * principal's name. Servlet security is implemented using annotations.
- * 
+ *
  * @author Sherif Makary
- * 
  */
 @SuppressWarnings("serial")
 @WebServlet("/SecuredEJBServlet")
@@ -54,17 +53,27 @@ public class SecuredEJBServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        PrintWriter writer = resp.getWriter();
+        final PrintWriter writer = resp.getWriter();
         String principal = null;
-        String authType = null;
-        String remoteUser = null;
+        // Get user name from login principal
+        final String remoteUser = req.getRemoteUser();
+        // Get authentication type
+        final String authType = req.getAuthType();
 
         // Get security principal
-        principal = securedEJB.getSecurityInfo();
-        // Get user name from login principal
-        remoteUser = req.getRemoteUser();
-        // Get authentication type
-        authType = req.getAuthType();
+        try {
+            principal = securedEJB.getSecurityInfo();
+        } catch (EJBAccessException ejae) {
+            writer.println(PAGE_HEADER);
+            writer.println("<h1>" + "Failed to call Secured EJB " + "</h1>");
+            writer.println("<p>" + "Web User : " + remoteUser + "</p>");
+            writer.println("<p>" + "Authentication Type : " + authType + "</p>");
+            writer.println("<p>" + "Failure is:" + "</p>");
+            ejae.printStackTrace(writer);
+            writer.println(PAGE_FOOTER);
+            writer.close();
+            return;
+        }
 
         writer.println(PAGE_HEADER);
         writer.println("<h1>" + "Successfully called Secured EJB " + "</h1>");
